@@ -12,7 +12,7 @@ I ended up using the existing [rs/cors](https://github.com/rs/cors) package whic
   * [Installation](#installation)
   * [Use](#use)
   	+ [The API](#the-api)
-  	+ [Initializing the CORS Middleware(#initializing-the-cors-middleware)
+  	+ [Initializing the CORS Middleware](#initializing-the-cors-middleware)
   	+ [Routing](#routing)
 
 ## [Use Case](#use-case)
