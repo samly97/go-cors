@@ -4,6 +4,14 @@ import (
 	"net/http"
 )
 
+// c := cors.New(cors.Options{
+// 	AllowCredentials: true,
+// 	AllowedOrigins:   []string{"http://localhost:3000"},
+// 	AllowedMethods:   []string{"GET", "POST"},
+// 	AllowedHeaders: []string{"Origin", "Content-Type",
+// 		"X-Auth-Token"},
+// })
+
 type Cors struct {
 }
 
