@@ -1,7 +1,8 @@
-package middleware
+package cors
 
 import (
 	"net/http"
+	"strings"
 )
 
 // c := cors.New(cors.Options{
@@ -12,14 +13,33 @@ import (
 // 		"X-Auth-Token"},
 // })
 
-type Cors struct {
+// CORS is
+type CORS struct {
+	Options map[string]string
 }
 
-func (c *Cors) Apply(next http.Handler) http.HandlerFunc {
+func New(opts ...corsOption) CORS {
+	cors := CORS{Options: make(map[string]string)}
+	for _, opt := range opts {
+		opt(&cors)
+	}
+	return cors
+}
+
+type corsOption func(*CORS)
+
+func AllowOrigins(origins []string) corsOption {
+	return func(cors *CORS) {
+		s := strings.Join(origins, ", ")
+		cors.Options["Access-Control-Allow-Origin"] = s
+	}
+}
+
+func (c *CORS) Apply(next http.Handler) http.HandlerFunc {
 	return c.ApplyFn(next.ServeHTTP)
 }
 
-func (c *Cors) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
+func (c *CORS) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			// Set Prelight headers here
