@@ -74,9 +74,15 @@ func (c *CORS) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// corsOptions is a function type used in initializing a CORS struct via
+// the 'New' function. Options are added inline as pointer to the object
+// is passed.
 //
+// Order of initialization shouldn't matter.
 type corsOption func(*CORS)
 
+// AllowOrigins whitelists different origins (sites: A, B, ..., Y)
+// to access resources on site Z.
 func AllowOrigins(origins []string) corsOption {
 	return func(cors *CORS) {
 		s := strings.Join(origins, ", ")
@@ -84,6 +90,29 @@ func AllowOrigins(origins []string) corsOption {
 	}
 }
 
-// 	AllowCredentials: true,
-// 	AllowedMethods:   []string{"GET", "POST"},
-// 	AllowedHeaders: []string{"Origin", "Content-Type",
+// AllowCredentials will allow authentication from different sites to
+// host. For instance, this includes site cookies.
+func AllowCredentials(allow bool) corsOption {
+	cors.Options["Allow-Control-Allow-Credentials"] = string(allow)
+}
+
+// AllowMethods will allow the HTTP methods from different sites to host.
+// E.g.
+//	cors.AllowMethods([]string{"GET", "POST"}))
+//	GET and POST methods allowed on host
+func AllowMethods(methods []string) corsOption {
+	s := strings.Join(methods, ", ")
+	cors.Options["Allow-Control-Allow-Methods"] = s
+}
+
+// AllowHeaders will whitelist the specified non-simple header types.
+// Simple header example:
+//	Content-Type: text/plain
+// Non-simple header example:
+//	Content-Type: application/json
+// Checkout Mozilla's documentation for more information on non-simple
+// headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+func AllowHeaders(headers []string) corsOption {
+	s := strings.Join(headers, ", ")
+	cors.Options["Access-Control-Allow-Headers"] = s
+}
