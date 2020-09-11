@@ -2,6 +2,7 @@ package cors
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -37,40 +38,44 @@ type CORS struct {
 // New initializes a CORS object with the options specified by the
 // variadic corsOptions function.
 func New(opts ...corsOption) CORS {
-	cors := CORS{Options: make(map[string]string)}
+	cors := CORS{Headers: make(map[string]string)}
 	for _, opt := range opts {
 		opt(&cors)
 	}
 	return cors
 }
 
+// Wrap this around your: http.Handler; which require CORS
+//
+// Apply applies the CORS headers and values defined during initializing
+// the CORS struct to both the preflight and response headers.
 func (c *CORS) Apply(next http.Handler) http.HandlerFunc {
 	return c.ApplyFn(next.ServeHTTP)
 }
 
+// Wrap this around your: http.HandlerFunc; which require CORS
+//
+// ApplyFn applies the CORS headers and values defined during initializing
+// the CORS struct to both the preflight and response headers.
 func (c *CORS) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			// Set Prelight headers here
-			w.Header().Set("Access-Control-Allow-Origin",
-				"http://localhost:3000")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
-			w.Header().Set("Access-Control-Allow-Headers",
-				"Content-Type, Origin")
-			w.Header().Set("Access-Control-Max-Age", "300")
+			c.writeHeaders(w)
 			return
 		} else {
-			w.Header().Set("Access-Control-Allow-Origin",
-				"http://localhost:3000")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
-			w.Header().Set("Access-Control-Allow-Headers",
-				"Content-Type, Origin")
-			w.Header().Set("Access-Control-Max-Age", "300")
+			c.writeHeaders(w)
 			// Forward to non-simple request
 			next(w, r)
 		}
+	}
+}
+
+// writeHeaders is a helper function that goes through the 'Headers'
+// map and writes the hander and value to the http.ResponseWriter.
+func (c *CORS) writeHeaders(w http.ResponseWriter) {
+	for header, val := range c.Headers {
+		w.Header().Set(header, val)
 	}
 }
 
@@ -86,14 +91,17 @@ type corsOption func(*CORS)
 func AllowOrigins(origins []string) corsOption {
 	return func(cors *CORS) {
 		s := strings.Join(origins, ", ")
-		cors.Options["Access-Control-Allow-Origin"] = s
+		cors.Headers["Access-Control-Allow-Origin"] = s
 	}
 }
 
 // AllowCredentials will allow authentication from different sites to
 // host. For instance, this includes site cookies.
 func AllowCredentials(allow bool) corsOption {
-	cors.Options["Allow-Control-Allow-Credentials"] = string(allow)
+	return func(cors *CORS) {
+		s := strconv.FormatBool(allow)
+		cors.Headers["Access-Control-Allow-Credentials"] = s
+	}
 }
 
 // AllowMethods will allow the HTTP methods from different sites to host.
@@ -101,8 +109,10 @@ func AllowCredentials(allow bool) corsOption {
 //	cors.AllowMethods([]string{"GET", "POST"}))
 //	GET and POST methods allowed on host
 func AllowMethods(methods []string) corsOption {
-	s := strings.Join(methods, ", ")
-	cors.Options["Allow-Control-Allow-Methods"] = s
+	return func(cors *CORS) {
+		s := strings.Join(methods, ", ")
+		cors.Headers["Access-Control-Allow-Methods"] = s
+	}
 }
 
 // AllowHeaders will whitelist the specified non-simple header types.
@@ -113,6 +123,8 @@ func AllowMethods(methods []string) corsOption {
 // Checkout Mozilla's documentation for more information on non-simple
 // headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 func AllowHeaders(headers []string) corsOption {
-	s := strings.Join(headers, ", ")
-	cors.Options["Access-Control-Allow-Headers"] = s
+	return func(cors *CORS) {
+		s := strings.Join(headers, ", ")
+		cors.Headers["Access-Control-Allow-Headers"] = s
+	}
 }
