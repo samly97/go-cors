@@ -12,7 +12,7 @@ I ended up using the existing [rs/cors](https://github.com/rs/cors) package whic
   * [Installation](#installation)
   * [Use](#use)
   	+ [The API](#the-api)
-  	+ [Initializing the CORS Middleware](#init-cors-mw)
+  	+ [Initializing the CORS Middleware](#initializing-the-cors-middleware)
   	+ [Routing](#routing)
 
 ## [Use Case](#use-case)
@@ -63,23 +63,22 @@ r.HandleFunc("/api/workouts",
 	requireUserMw.ApplyFn(
 		workoutC.GetWorkouts)).
 		Methods("GET")
-)
 ```
 
 The API is defined on the `/api/workouts` route on port `8080`, and the http.HandlerFunc requires user authentication, so it's wrapped in authentication middleware. 
 
 This API returns data in JSON format so the header and value are `Content-Type` and `application/json`.
 
-#### [Initializing the CORS Middleware](#init-cors-mw)
+#### [Initializing the CORS Middleware](#initializing-the-cors-middleware)
 
 To use the CORS middleware:
 
 ```go
 corsMw := cors.New(
-	cors.AllowOrigins([]string{"http://localhost:3000"})
+	cors.AllowOrigins([]string{"http://localhost:3000"}),
 	cors.AllowCredentials(true),
-	cors.AllowMethods([]string{"GET"})
-	cors.AllowHeaders([]string{"Content-Type"})
+	cors.AllowMethods([]string{"GET"}),
+	cors.AllowHeaders([]string{"Content-Type"}),
 	)
 ```
 
