@@ -33,12 +33,18 @@ import (
 //	userAuthMw.ApplyFn(corsMw.ApplyFn(...))
 type CORS struct {
 	Headers map[string]string
+	Origins map[string]struct{}
+	Methods map[string]struct{}
 }
 
 // New initializes a CORS object with the options specified by the
 // variadic corsOptions function.
 func New(opts ...corsOption) CORS {
-	cors := CORS{Headers: make(map[string]string)}
+	cors := CORS{
+		Headers: make(map[string]string),
+		Origins: make(map[string]struct{}),
+		Methods: make(map[string]struct{}),
+	}
 	for _, opt := range opts {
 		opt(&cors)
 	}
@@ -61,10 +67,10 @@ func (c *CORS) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			// Set Prelight headers here
-			c.writeHeaders(w)
+			c.writeHeaders(w, r)
 			return
 		} else {
-			c.writeHeaders(w)
+			c.writeHeaders(w, r)
 			// Forward to non-simple request
 			next(w, r)
 		}
@@ -73,7 +79,15 @@ func (c *CORS) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 
 // writeHeaders is a helper function that goes through the 'Headers'
 // map and writes the hander and value to the http.ResponseWriter.
-func (c *CORS) writeHeaders(w http.ResponseWriter) {
+func (c *CORS) writeHeaders(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	method := r.Header.Get("Method")
+	if _, ok := c.Origins[origin]; ok {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	}
+	if _, ok := c.Methods[method]; ok {
+		w.Header().Set("Access-Control-Allow-Methods", method)
+	}
 	for header, val := range c.Headers {
 		w.Header().Set(header, val)
 	}
@@ -90,8 +104,9 @@ type corsOption func(*CORS)
 // to access resources on site Z.
 func AllowOrigins(origins []string) corsOption {
 	return func(cors *CORS) {
-		s := strings.Join(origins, ", ")
-		cors.Headers["Access-Control-Allow-Origin"] = s
+		for _, origin := range origins {
+			cors.Origins[origin] = struct{}{}
+		}
 	}
 }
 
@@ -110,8 +125,9 @@ func AllowCredentials(allow bool) corsOption {
 //	GET and POST methods allowed on host
 func AllowMethods(methods []string) corsOption {
 	return func(cors *CORS) {
-		s := strings.Join(methods, ", ")
-		cors.Headers["Access-Control-Allow-Methods"] = s
+		for _, method := range methods {
+			cors.Methods[method] = struct{}{}
+		}
 	}
 }
 
