@@ -1,6 +1,6 @@
 # Welcome to Go-Cors!
 
-* Note: this project was created as "practice", it is not meant to be used in development/production *
+**Note: this project was created as practice, it is not meant to be used in development/production**
 
 Go-Cors is middleware to apply CORS headers to CORS [requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 
