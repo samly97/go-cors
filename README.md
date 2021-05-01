@@ -1,5 +1,7 @@
 # Welcome to Go-Cors!
 
+* Note: this project was created as "practice", it is not meant to be used in development/production *
+
 Go-Cors is middleware to apply CORS headers to CORS [requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 
 When I split one of my projects from a Golang SSR application to a ReactJS + Golang API SPA pattern, I noticed that when I was testing my APIs locally, that CORS started popping out in the console as the React frontend and Golang backend were hosted on different ports.
